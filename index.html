@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>게임 플레이 타임라인 | 포트폴리오 예시</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#121a2d; --muted:#aab5cc; --line:#33415d; --accent:#9be7c4; --text:#f4f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 80% 0%, #20304a 0, var(--bg) 42%); color:var(--text); font:16px/1.65 "Segoe UI", "Malgun Gothic", sans-serif; }
+    main { width:min(1280px, 94vw); margin:0 auto; padding:48px 0 80px; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.16em; font-size:12px; font-weight:700; }
+    h1 { font-size:clamp(32px,6vw,54px); line-height:1.15; margin:12px 0; }
+    .intro { color:var(--muted); max-width:650px; margin:0 0 42px; }
+    .note { display:inline-block; border:1px solid #52617d; border-radius:99px; padding:4px 12px; color:#d8e2f1; font-size:12px; margin-bottom:16px; }
+    .timeline { position:relative; padding-left:30px; }
+    .timeline::before { content:""; position:absolute; left:7px; top:8px; bottom:12px; width:2px; background:linear-gradient(var(--accent),var(--line)); }
+    article { position:relative; background:rgba(18,26,45,.9); border:1px solid #293651; border-radius:16px; padding:20px 22px; margin:0 0 18px; box-shadow:0 14px 36px #0003; }
+    article::before { content:""; position:absolute; left:-29px; top:26px; width:12px; height:12px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 5px #9be7c426; }
+    .meta { color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.08em; }
+    h2 { margin:4px 0 8px; font-size:22px; }
+    p { margin:0; color:var(--muted); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .tag { border:1px solid #40506c; border-radius:99px; padding:3px 10px; font-size:12px; color:#dce5f3; }
+    footer { color:#7e8aa3; font-size:12px; margin:30px 0 0 30px; }
+    .topbar { position:sticky; top:0; z-index:5; background:#0b1020eF; border-bottom:1px solid #293651; backdrop-filter:blur(12px); }
+    .nav { width:min(920px,92vw); margin:0 auto; display:flex; align-items:center; gap:8px; min-height:64px; overflow-x:auto; }
+    .brand { color:var(--accent); font-weight:800; letter-spacing:.08em; margin-right:auto; white-space:nowrap; }
+    .nav button { color:#bec9db; background:transparent; border:0; border-radius:9px; padding:9px 12px; font:inherit; cursor:pointer; white-space:nowrap; }
+    .nav button:hover,.nav button.active { background:#22314a; color:var(--text); }
+    [hidden] { display:none !important; }
+    .placeholder { min-height:320px; display:grid; align-content:center; padding:32px; border:1px solid #293651; border-radius:18px; background:rgba(18,26,45,.9); }
+    .placeholder h2 { font-size:28px; }
+    .summary { display:flex; gap:12px; flex-wrap:wrap; margin:24px 0; }
+    .summary-item { flex:1; min-width:200px; background:#152a30; border:1px solid #365b59; border-radius:14px; padding:16px 20px; }
+    .summary-item strong { display:block; color:var(--accent); font-size:20px; }
+    .summary-item span { color:#c1d4d5; font-size:13px; }
+    .chart-scroll { overflow-x:auto; border:1px solid #33415d; border-radius:16px; background:#10182a; }
+    .chart-scroll { scrollbar-width:none; }
+    .chart-scroll::-webkit-scrollbar { display:none; }
+    .chart { min-width:940px; position:relative; }
+    .chart-row { display:grid; grid-template-columns:215px 1fr; min-height:72px; }
+    .chart-row:last-child { border-bottom:0; }
+    .row-label { position:sticky; left:0; z-index:3; background:#121d30; padding:15px 12px; border-right:1px solid #33415d; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+    .row-label strong { display:block; font-size:14px; white-space:nowrap; }
+    .row-label small { color:var(--muted); font-size:12px; }
+    .chart-row.current .row-label { background:#173136; }
+    .track { position:relative; min-height:72px; }
+    .track { margin-right:48px; }
+    .gridline { position:absolute; top:0; bottom:0; border-left:1px solid #ffffff0c; pointer-events:none; }
+    .axis { min-height:62px; background:#10182a; }
+    .axis .track { min-height:62px; }
+    .axis-label { position:absolute; top:44px; transform:translate(10px, -50%); color:#c8d5e8; font-size:11px; white-space:nowrap; text-align:left; }
+    .axis-dot { position:absolute; top:40px; width:7px; height:7px; border-radius:50%; background:#b8cbe3; transform:translateX(-50%); z-index:2; }
+    .axis .gridline { top:44px; }
+    .now-label { position:absolute; top:36px; transform:translateX(-100%); color:var(--accent); font-size:10px; white-space:nowrap; padding-right:5px; }
+    .play-bar { position:absolute; top:21px; height:30px; min-width:8px; background:var(--bar); border:1px solid #ffffff4d; border-radius:7px; cursor:pointer; padding:0; z-index:2; }
+    .play-bar:hover,.play-bar:focus-visible { filter:brightness(1.3); outline:2px solid white; outline-offset:3px; }
+    .play-bar.live { box-shadow:0 0 16px #9be7c433; border-color:#d5fff0; }
+    .play-bar { color:#102134; font-size:11px; font-weight:700; overflow:hidden; white-space:nowrap; }
+    .lane-name { position:absolute; left:8px; color:#91a5c2; font-size:10px; }
+    .legend { display:flex; gap:18px; margin:0 0 16px; color:#bec9db; font-size:13px; }
+    .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; }
+    .chart-help { font-size:16px; font-weight:800; color:#ffdf5d; margin:20px 0; text-align:center; }
+    .selection { margin-top:16px; padding:18px 22px; border:1px solid #40506c; border-radius:12px; min-height:102px; background:#172238; }
+    .selection strong { display:block; margin-bottom:4px; }
+    .activity-story { display:grid; grid-template-columns:minmax(240px, 44%) 1fr; gap:28px; align-items:center; margin-top:20px; }
+    .activity-story img { display:block; width:100%; height:auto; border-radius:10px; }
+    .activity-story figure { margin:0; }
+    .activity-story figcaption { margin-top:8px; color:var(--muted); font-size:12px; }
+    .activity-story p { color:#e1e8f2; font-size:17px; line-height:1.9; }
+    .odin-story { grid-template-columns:minmax(0, 445px) minmax(0, 1fr); }
+    .vampir-story { grid-template-columns:minmax(0, 540px) minmax(0, 1fr); }
+    .activity-gallery { display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; margin-top:20px; }
+    .activity-gallery figure { margin:0; max-width:100%; }
+    .activity-gallery img { display:block; max-width:100%; height:auto; border-radius:8px; }
+    .activity-gallery .activity-photo { width:516px; }
+    .activity-gallery .ranking-photo { width:192px; }
+    .activity-gallery a { display:block; }
+    .activity-gallery figcaption { margin-top:8px; color:var(--muted); font-size:12px; }
+    .guild-detail { display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr); gap:28px; align-items:center; margin-top:20px; }
+    .guild-detail .activity-gallery { margin-top:0; flex-wrap:nowrap; gap:16px; }
+    .guild-detail .activity-photo { flex:1; min-width:0; }
+    .guild-detail .ranking-photo { width:96px; flex-shrink:0; }
+    .guild-story p { color:#e1e8f2; font-size:17px; line-height:1.9; }
+    .guild-story p + p { margin-top:18px; }
+    @media (max-width:850px) { .guild-detail { grid-template-columns:1fr; } }
+    @media (max-width:650px) { .activity-story { grid-template-columns:1fr; gap:18px; } }
+    @media (max-width:600px) { .nav { gap:2px; } .brand { display:none; } .nav button { padding:8px 10px; font-size:14px; } main { padding-top:40px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav" aria-label="포트폴리오 메뉴">
+      <div class="brand">PLAYER / DESIGNER</div>
+      <button type="button" data-page="intro">소개</button>
+      <button class="active" type="button" data-page="games">게임 경험</button>
+      <button type="button" data-page="projects">프로젝트</button>
+      <button type="button" data-page="contact">연락처</button>
+    </nav>
+  </header>
+  <main>
+    <section data-view="intro" hidden>
+      <div class="eyebrow">About Me</div>
+      <h1>게임을 플레이하고,<br>경험을 기록합니다.</h1>
+      <p class="intro">이곳은 자기소개와 게임 기획에 관심을 갖게 된 계기를 담을 페이지입니다. 메뉴를 눌러 각 화면으로 이동해보세요.</p>
+      <span class="note">소개 문구는 추후 작성</span>
+    </section>
+    <section data-view="games">
+    <div class="eyebrow">Game Experience</div>
+    <h1>플레이 경험 타임라인</h1>
+    <p class="intro" style="margin-bottom:16px">가로축은 시간, 각 행은 게임과 서버입니다. 로드나인은 로웨인·가르바나 서버를 각각 나누고, 색으로 중립·라인 활동을 구분했습니다.</p>
+    <span class="note">6개 게임 · 2026.10.21 기준</span>
+    <div class="summary">
+      <div class="summary-item"><strong>중립 · 라인 활동의 변화</strong><span>로드나인: 로웨인 → 가르바나</span></div>
+      <div class="summary-item"><strong>현재 4개 게임 플레이 중</strong><span>로드나인 · 솔: 인챈트 · 제우스 · 이클립스</span></div>
+    </div>
+    <p class="chart-help">막대를 누르면 자세한 활동을 볼 수 있습니다.</p>
+    <div class="legend"><span><i style="background:#9be7c4"></i>중립</span><span><i style="background:#f4ce87"></i>라인</span></div>
+    <div class="chart-scroll" role="region" aria-label="가로로 스크롤할 수 있는 게임 플레이 기간 차트" tabindex="0"><div class="chart" id="play-chart"></div></div>
+    <div class="selection" id="play-selection" aria-live="polite"><strong>로드나인 · 서버별 플레이 이력</strong><p>로웨인: 1월까지 라인 → 중립 / 가르바나: 첫 한 달 중립 → 반왕 성공 후 라인 → 2026.04.27 이후 중립</p></div>
+    </section>
+    <section data-view="projects" hidden>
+      <div class="eyebrow">Projects</div>
+      <h1>프로젝트</h1>
+      <p class="intro">창업 수업 프로젝트와 다른 활동을 역할과 결과 중심으로 정리할 수 있습니다.</p>
+      <div class="placeholder"><span class="note">예시 섹션</span><h2>10만 원 창업 프로젝트</h2><p>석고 방향제와 솜사탕 판매 활동을 정리할 자리입니다. 프로젝트명과 수치는 실제 내용 확인 후 반영합니다.</p></div>
+    </section>
+    <section data-view="contact" hidden>
+      <div class="eyebrow">Contact</div>
+      <h1>연락처</h1>
+      <div class="placeholder"><h2>연락 정보를 추가할 수 있어요</h2><p>이메일이나 링크는 실제로 공개할 정보를 정한 뒤 입력합니다.</p></div>
+    </section>
+  </main>
+  <script>
+    const asOf = '2026-10-21';
+    // Approximate role transitions are for drawing only; descriptions retain the user's precision.
+    const experiences = [
+      ['로드나인', '로웨인', '2024-07-12', '2025-02-01', "라인 '리더'길드 (스트리머 팡이요 연합)", 'line', 0, '2024.07.12 ~ 2025년 1월'],
+      ['로드나인', '로웨인', '2025-02-01', '2025-10-03', "중립 '초식' 길드 (중립 1등 길드) + 길드 마스터", 'neutral', 0, '2025년 2월 ~ 2025.10.03'],
+      ['로드나인', '가르바나', '2025-09-26', '2025-10-26', '중립 · 저승사자（첫 한 달）', 'neutral', 1, '2025.09.26 ~ 2025년 10월'],
+      ['로드나인', '가르바나', '2025-10-26', '2026-04-28', "반왕 '조커' 길드 (일반인 길드) → 반왕 성공 후 라인", 'line', 1, '첫 한 달 이후 ~ 2026.04.27'],
+      ['로드나인', '가르바나', '2026-04-28', null, '다시 중립으로 활동', 'neutral', 1, '2026.04.27 이후 ~ 현재'],
+      ['오딘', '뇨도르', '2025-06-25', '2025-08-25', "중립 '다시 모여' 길드", 'neutral', 0, '2025.06.25 ~ 2025.08.25'],
+      ['뱀피르', '', '2025-08-26', '2025-11-26', "라인 '신화' 길드 (스트리머 알트 연합)", 'line', 0, '2025.08.26 ~ 2025년 11월'],
+      ['솔: 인챈트', '', '2026-06-18', null, '중립', 'neutral', 0, '2026.06.18 ~ 현재'],
+      ['제우스', '', '2026-08-26', null, '라인', 'line', 0, '2026.08.26 ~ 현재'],
+      ['이클립스', '', '2026-09-10', null, '중립', 'neutral', 0, '2026.09.10 ~ 현재']
+    ];
+    const chartStart = Date.parse('2024-07-01T00:00:00Z');
+    const chartEnd = Date.parse(asOf + 'T00:00:00Z');
+    const position = (date) => 1 + (Date.parse(date + 'T00:00:00Z') - chartStart) / (chartEnd - chartStart) * 98;
+    const formatDate = (date) => date.replaceAll('-', '.');
+    const chart = document.getElementById('play-chart');
+    const ticks = [];
+    for (let year = 2024; year <= 2026; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const date = `${year}-${String(month).padStart(2, '0')}-01`;
+        if (position(date) >= 0 && position(date) < 100 && month % 3 === 1) ticks.push({ date, year, month });
+      }
+    }
+    function makeTrack(axis = false) {
+      const track = document.createElement('div');
+      track.className = 'track';
+      ticks.forEach(({date, year, month}, index) => {
+        const line = document.createElement('span');
+        line.className = 'gridline'; line.style.left = position(date) + '%'; track.append(line);
+        if (axis) {
+          const label = document.createElement('span'); label.className = 'axis-label';
+          const left = position(date);
+          label.style.left = left + '%';
+          label.textContent = `${year}.${String(month).padStart(2, '0')}`; track.append(label);
+          const dot = document.createElement('span'); dot.className = 'axis-dot'; dot.style.left = left + '%'; track.append(dot);
+        }
+      });
+      return track;
+    }
+    const axis = document.createElement('div'); axis.className = 'chart-row axis';
+    const axisTitle = document.createElement('div'); axisTitle.className = 'row-label'; axisTitle.textContent = '게임 / 서버';
+    axis.append(axisTitle, makeTrack(true)); chart.append(axis);
+    [...new Set(experiences.map(item => JSON.stringify([item[0], item[1]])))].forEach(key => {
+      const [game, rowServer] = JSON.parse(key);
+      const entries = experiences.filter(item => item[0] === game && item[1] === rowServer);
+      const row = document.createElement('div'); row.className = 'chart-row' + (entries.some(item => !item[3]) ? ' current' : '');
+      const label = document.createElement('div'); label.className = 'row-label';
+      const title = document.createElement('strong'); title.textContent = rowServer ? `${game} (${rowServer} 서버)` : game;
+      label.append(title);
+      const track = makeTrack();
+      entries.forEach(([, server, start, end, activity, role, lane, period]) => {
+      const bar = document.createElement('button');
+      bar.type = 'button'; bar.className = 'play-bar' + (end ? '' : ' live');
+      bar.style.left = position(start) + '%';
+      bar.style.width = (position(end || asOf) - position(start)) + '%'; bar.style.setProperty('--bar', role === 'line' ? '#f4ce87' : '#9be7c4');
+      bar.style.top = '21px';
+      bar.textContent = role === 'line' ? '라인' : '중립';
+      bar.title = `${game}${server ? ' · ' + server : ''}\n${period}\n${activity}`;
+      bar.setAttribute('aria-label', bar.title);
+      bar.addEventListener('click', () => {
+        const selection = document.getElementById('play-selection'); selection.replaceChildren();
+        const heading = document.createElement('strong'); heading.textContent = `${game}${server ? ' (' + server + ')' : ''} | ${period}`;
+        const description = document.createElement('p'); description.textContent = activity + (end ? '' : ' · 플레이 중');
+        selection.append(heading, description);
+        if (game === '로드나인' && server === '가르바나' && role === 'line') {
+          const screenshot = document.createElement('img');
+          screenshot.src = 'assets/garbana-joker-guild.png';
+          screenshot.alt = '로드나인 가르바나 조커 길드 활동 사진';
+          screenshot.style.cssText = 'display:block;width:100%;max-width:571px;height:auto;margin-top:20px;border-radius:10px';
+          selection.append(screenshot);
+        }
+        if (game === '뱀피르') {
+          const story = document.createElement('div'); story.className = 'activity-story vampir-story';
+          const screenshot = document.createElement('img');
+          screenshot.src = 'assets/vampir-myth-clan.png';
+          screenshot.alt = '뱀피르 신화 길드와 스트리머 알트 연합 활동 사진';
+          const text = document.createElement('p');
+          text.append('다미르1 서버에서 ');
+          const nickname = document.createElement('span');
+          nickname.textContent = "'하눌'";
+          nickname.style.cssText = 'color:#ffdf5d;font-weight:700';
+          text.append(nickname, ' 캐릭터로 3개월 동안 라인 생활을 하였습니다.');
+          story.append(screenshot, text); selection.append(story);
+        }
+        if (game === '오딘') {
+          const story = document.createElement('div'); story.className = 'activity-story odin-story';
+          const screenshot = document.createElement('img');
+          screenshot.src = 'assets/odin-dasimo-character.png';
+          screenshot.alt = '오딘 다시 모여 길드 캐릭터 사진';
+          const text = document.createElement('p');
+          text.append('로드나인을 통해 리니지라이크 장르의 재미를 알게 된 후, 대표작으로 알려진 ‘오딘’의 신규 서버 오픈 소식을 접했습니다. 어떤 게임인지 궁금해 시작했고, ');
+          const nickname = document.createElement('span');
+          nickname.textContent = "'돈먹은'";
+          nickname.style.cssText = 'color:#ffdf5d;font-weight:700';
+          text.append(nickname, ' 캐릭으로 2달 동안 중립 플레이 하였습니다.');
+          story.append(screenshot, text); selection.append(story);
+        }
+        if (game === '로드나인' && server === '로웨인' && role === 'line') {
+          const story = document.createElement('div'); story.className = 'activity-story';
+          const screenshot = document.createElement('img'); screenshot.src = 'assets/rowein-line-original.png';
+          screenshot.alt = '로드나인 로웨인 10 서버에서 다로시 캐릭터로 참여한 라인 활동';
+          const text = document.createElement('p');
+          text.append('로웨인 10 서버에서 ');
+          const characterName = document.createElement('span');
+          characterName.textContent = "'다로시'";
+          characterName.style.cssText = 'color:#ffdf5d;font-weight:700';
+          text.append(characterName, ' 캐릭터로 리니지라이크 장르에 처음 입문했으며, 6개월 동안 라인 생활을 했습니다.');
+          const figure = document.createElement('figure');
+          const caption = document.createElement('figcaption'); caption.textContent = '리더 길드 보스 활동';
+          figure.append(screenshot, caption);
+          story.append(figure, text); selection.append(story);
+        }
+        if (game === '로드나인' && server === '로웨인' && role === 'neutral') {
+          const gallery = document.createElement('div'); gallery.className = 'activity-gallery';
+          [
+            ['assets/rowein-chosik-activity.png', '초식 길드 활동 사진', 'activity-photo'],
+            ['assets/rowein-chosik-ranking.png', '길드 분배 엑셀 사진', 'ranking-photo']
+          ].forEach(([src, caption, className]) => {
+            const figure = document.createElement('figure'); figure.className = className;
+            const link = document.createElement('a'); link.href = src; link.target = '_blank'; link.rel = 'noopener';
+            const img = document.createElement('img'); img.src = src; img.alt = caption;
+            const figcaption = document.createElement('figcaption'); figcaption.textContent = caption;
+            link.append(img); figure.append(link, figcaption); gallery.append(figure);
+          });
+          const detail = document.createElement('div'); detail.className = 'guild-detail';
+          const story = document.createElement('div'); story.className = 'guild-story';
+          [
+            '라인 활동을 이어가며 삶이 피폐해진다는 느낌을 받아, 닉네임을 ‘돈먹은’으로 변경하고 중립 ‘초식’ 길드에 합류했습니다.',
+            '입단 약 2개월 후 기존 길드 마스터가 게임을 그만두면서 운영을 이어받았습니다. 이후 4개월 동안 길드 마스터로 활동하며, 엑셀을 활용해 길드 보상 분배를 관리했습니다.'
+          ].forEach(content => {
+            const paragraph = document.createElement('p');
+            const nickname = '‘돈먹은’';
+            if (content.includes(nickname)) {
+              const [before, after] = content.split(nickname);
+              const highlight = document.createElement('span');
+              highlight.textContent = nickname;
+              highlight.style.cssText = 'color:#ffdf5d;font-weight:700';
+              paragraph.append(before, highlight, after);
+            } else {
+              paragraph.textContent = content;
+            }
+            story.append(paragraph);
+          });
+          detail.append(gallery, story); selection.append(detail);
+        }
+      });
+      track.append(bar);
+      });
+      row.append(label, track); chart.append(row);
+    });
+    const menuButtons = document.querySelectorAll('[data-page]');
+    const views = document.querySelectorAll('[data-view]');
+    menuButtons.forEach((button) => button.addEventListener('click', () => {
+      const target = button.dataset.page;
+      views.forEach((view) => { view.hidden = view.dataset.view !== target; });
+      menuButtons.forEach((item) => item.classList.toggle('active', item === button));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+  </script>
+</body>
+</html>
